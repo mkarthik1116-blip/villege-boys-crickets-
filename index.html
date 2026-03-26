@@ -175,10 +175,9 @@ function resetMatch(){
     document.getElementById("bat1File").value=""; document.getElementById("bat2File").value="";
     document.getElementById("bowlFile").value="";
     document.getElementById("strikerImg").src=""; document.getElementById("nonStrikerImg").src=""; document.getElementById("bowlerImg").src="";
-}
+} 
 </script>
-
-</body> <script type="module">
+    <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
@@ -195,14 +194,59 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Example: score update
-function updateScore(val) {
-  set(ref(db, "score"), val);
+// 🔥 SAVE FULL MATCH DATA
+function saveToFirebase(){
+  set(ref(db, "match"), {
+    runs: runs,
+    wickets: wickets,
+    balls: balls
+  });
 }
 
-// Live update receive
-onValue(ref(db, "score"), (snapshot) => {
-  document.getElementById("score").innerText = snapshot.val();
+// 🔥 READ LIVE DATA
+onValue(ref(db, "match"), (snapshot) => {
+  const data = snapshot.val();
+  if(data){
+    runs = data.runs || 0;
+    wickets = data.wickets || 0;
+    balls = data.balls || 0;
+    update(); // UI update
+  }
 });
+
+// 🔥 HOOK INTO YOUR FUNCTIONS
+window.addRun = function(num,type="Run"){
+    if(type==="Run"){ runs+=num; balls++; if(num%2===1) swapStrike(); }
+    logBall(num,type); 
+    update();
+    saveToFirebase(); // 🔥 important
+}
+
+window.addWicket = function(){
+    wickets++; balls++; 
+    logBall("Wicket","Wicket"); 
+    striker="Next Batsman"; 
+    updateBatsmanDisplay(); 
+    update(); 
+    saveToFirebase();
+}
+
+window.addBall = function(){
+    balls++; 
+    logBall("Dot","Ball"); 
+    update(); 
+    saveToFirebase();
+}
+
+window.resetMatch = function(){
+    runs=0; wickets=0; balls=0;
+    lastBallsArr=[];
+    document.getElementById("log").innerHTML="<strong>Ball Log:</strong><br>";
+    document.getElementById("lastBalls").innerText="Last 5 Balls: -";
+    update();
+    saveToFirebase();
+} 
 </script>
+
+</body> 
 </html>
