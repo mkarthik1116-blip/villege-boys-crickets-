@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Village Cricket Live - Phone Images</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            text-align: center;
+        }
+        .header {
+            padding: 15px;
+            font-size: 24px;
+            background: black;
+            color: #00ffcc;
+        }
+        .card {
+            margin: 20px auto;
+            padding: 20px;
+            width: 500px;
+            background: #1c1c1c;
+            border-radius: 10px;
+        }
+        .score {
+            font-size: 35px;
+            margin: 15px 0;
+            color: #00ffcc;
+        }
+        button { padding: 10px; margin: 5px; border: none; cursor: pointer; border-radius: 5px; font-size: 14px; }
+        .run { background: green; color: white; }
+        .wicket { background: red; color: white; }
+        .ball { background: orange; color: white; }
+        .extras { background: purple; color: white; }
+        input[type=text], input[type=file] { padding: 8px; margin: 5px; width: 120px; }
+        #log { background: #00000070; margin-top: 20px; padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; text-align: left; }
+        #lastBalls { margin-top: 10px; font-size: 14px; color: #ffcc00; }
+        .player-container { display: flex; justify-content: space-around; margin: 15px 0; }
+        .player { text-align: center; }
+        .player img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #00ffcc; margin-bottom: 5px; object-fit: cover; }
+        .footer { margin-top:20px; font-size:12px; color:#00ffcc; }
+    </style>
+</head>
+<body>
+
+<div class="header">🏏 Village Cricket Live</div>
+
+<div class="card">
+    <input type="text" id="teamA" placeholder="Team A Name">
+    <input type="text" id="teamB" placeholder="Team B Name"><br>
+
+    <h3 id="match">Team A vs Team B</h3>
+    <div class="score" id="score">0 / 0</div>
+    <p id="overs">Overs: 0.0</p>
+
+    <div class="player-container">
+        <div class="player">
+            <img id="strikerImg" src="" alt="Striker">
+            <p id="striker">Striker: -</p>
+        </div>
+        <div class="player">
+            <img id="nonStrikerImg" src="" alt="Non-Striker">
+            <p id="nonStriker">Non-Striker: -</p>
+        </div>
+        <div class="player">
+            <img id="bowlerImg" src="" alt="Bowler">
+            <p id="bowler">Bowler: -</p>
+        </div>
+    </div>
+
+    <input type="text" id="bat1Input" placeholder="Batsman 1">
+    <input type="file" id="bat1File" accept="image/*"><br>
+    <input type="text" id="bat2Input" placeholder="Batsman 2">
+    <input type="file" id="bat2File" accept="image/*"><br>
+    <input type="text" id="bowlInput" placeholder="Bowler">
+    <input type="file" id="bowlFile" accept="image/*"><br>
+
+    <button onclick="setPlayers()">Set Players</button><br><br>
+
+    <button class="run" onclick="addRun(1)">+1 Run</button>
+    <button class="run" onclick="addRun(4)">+4 Runs</button>
+    <button class="run" onclick="addRun(6)">+6 Runs</button>
+    <button class="wicket" onclick="addWicket()">Wicket</button>
+    <button class="ball" onclick="addBall()">Ball</button>
+    <button class="extras" onclick="addRun(1,'Wide')">Wide</button>
+    <button class="extras" onclick="addRun(1,'No-Ball')">No-Ball</button><br><br>
+
+    <button onclick="resetMatch()">Reset / New Match</button>
+
+    <div id="log"><strong>Ball Log:</strong><br></div>
+    <div id="lastBalls"><strong>Last 5 Balls:</strong> -</div>
+
+    <div class="footer">
+        Created by: Karthik BSc 💻 | Assisted by: ChatGPT 🤖
+    </div>
+</div>
+
+<script>
+let runs=0, wickets=0, balls=0, striker="-", nonStriker="-", bowler="-", lastBallsArr=[];
+
+// Read image from phone file input
+function readImage(fileInput, imgId){
+    const file = fileInput.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = e => document.getElementById(imgId).src = e.target.result;
+        reader.readAsDataURL(file);
+    }
+}
+
+function addRun(num,type="Run"){
+    if(type==="Run"){ runs+=num; balls++; if(num%2===1) swapStrike(); }
+    logBall(num,type); update();
+}
+
+function addWicket(){ wickets++; balls++; logBall("Wicket","Wicket"); striker="Next Batsman"; updateBatsmanDisplay(); update(); }
+function addBall(){ balls++; logBall("Dot","Ball"); update(); }
+
+function swapStrike(){
+    [striker, nonStriker] = [nonStriker, striker];
+    [document.getElementById("strikerImg").src, document.getElementById("nonStrikerImg").src] =
+    [document.getElementById("nonStrikerImg").src, document.getElementById("strikerImg").src];
+    updateBatsmanDisplay();
+}
+
+function logBall(value,type){
+    let log=document.getElementById("log");
+    let overs=Math.floor(balls/6)+"."+(balls%6);
+    let entry=`Over ${overs}: ${type} ${value}`;
+    log.innerHTML+=entry+"<br>";
+    log.scrollTop = log.scrollHeight;
+    lastBallsArr.push(value + (type!=="Run"?` (${type})`:""));
+    if(lastBallsArr.length>5) lastBallsArr.shift();
+    document.getElementById("lastBalls").innerText="Last 5 Balls: "+lastBallsArr.join(", ");
+}
+
+function update(){ 
+    document.getElementById("score").innerText=runs+" / "+wickets; 
+    let overs=Math.floor(balls/6); 
+    let rem=balls%6; 
+    document.getElementById("overs").innerText="Overs: "+overs+"."+rem; 
+}
+
+function setPlayers(){
+    striker=document.getElementById("bat1Input").value || "-";
+    nonStriker=document.getElementById("bat2Input").value || "-";
+    bowler=document.getElementById("bowlInput").value || "-";
+    readImage(document.getElementById("bat1File"),"strikerImg");
+    readImage(document.getElementById("bat2File"),"nonStrikerImg");
+    readImage(document.getElementById("bowlFile"),"bowlerImg");
+    updateBatsmanDisplay();
+    document.getElementById("bowler").innerText="Bowler: "+bowler;
+    let tA=document.getElementById("teamA").value||"Team A";
+    let tB=document.getElementById("teamB").value||"Team B";
+    document.getElementById("match").innerText=tA+" vs "+tB;
+}
+
+function updateBatsmanDisplay(){ 
+    document.getElementById("striker").innerText="Striker: "+striker; 
+    document.getElementById("nonStriker").innerText="Non-Striker: "+nonStriker; 
+}
+
+function resetMatch(){
+    runs=0; wickets=0; balls=0; striker="-"; nonStriker="-"; bowler="-"; lastBallsArr=[];
+    document.getElementById("score").innerText="0 / 0";
+    document.getElementById("overs").innerText="Overs: 0.0";
+    updateBatsmanDisplay();
+    document.getElementById("bowler").innerText="Bowler: -";
+    document.getElementById("log").innerHTML="<strong>Ball Log:</strong><br>";
+    document.getElementById("lastBalls").innerText="Last 5 Balls: -";
+    document.getElementById("teamA").value=""; document.getElementById("teamB").value="";
+    document.getElementById("bat1Input").value=""; document.getElementById("bat2Input").value="";
+    document.getElementById("bowlInput").value="";
+    document.getElementById("bat1File").value=""; document.getElementById("bat2File").value="";
+    document.getElementById("bowlFile").value="";
+    document.getElementById("strikerImg").src=""; document.getElementById("nonStrikerImg").src=""; document.getElementById("bowlerImg").src="";
+}
+</script>
+
+</body>
+</html>
