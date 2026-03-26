@@ -178,5 +178,31 @@ function resetMatch(){
 }
 </script>
 
-</body>
+</body> <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_KEY",
+  authDomain: "PASTE_YOUR_DOMAIN",
+  databaseURL: "PASTE_YOUR_DB_URL",
+  projectId: "PASTE_YOUR_ID",
+  storageBucket: "PASTE",
+  messagingSenderId: "PASTE",
+  appId: "PASTE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Example: score update
+function updateScore(val) {
+  set(ref(db, "score"), val);
+}
+
+// Live update receive
+onValue(ref(db, "score"), (snapshot) => {
+  document.getElementById("score").innerText = snapshot.val();
+});
+</script>
 </html>
